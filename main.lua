@@ -2,6 +2,7 @@
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 
@@ -48,26 +49,47 @@ local function EnableDrag(dragFrame, moveFrame)
 end
 
 -- =================================================================
--- 1. KEY SYSTEM
+-- 1. KEY SYSTEM (AUTH)
 -- =================================================================
+local KeyShadow = Instance.new("ImageLabel")
+KeyShadow.Name = "KeyShadow"
+KeyShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+KeyShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+KeyShadow.Size = UDim2.new(0, 370, 0, 250)
+KeyShadow.BackgroundTransparency = 1
+KeyShadow.Image = "rbxassetid://1316045217"
+KeyShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+KeyShadow.ImageTransparency = 0.4
+KeyShadow.ScaleType = Enum.ScaleType.Slice
+KeyShadow.SliceCenter = Rect.new(10, 10, 118, 118)
+KeyShadow.Parent = ScreenGui
+
 local KeyHolder = Instance.new("Frame")
 KeyHolder.Name = "KeyHolder"
 KeyHolder.AnchorPoint = Vector2.new(0.5, 0.5)
 KeyHolder.Position = UDim2.new(0.5, 0, 0.5, 0)
 KeyHolder.Size = UDim2.new(0, 330, 0, 210)
-KeyHolder.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+KeyHolder.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
 KeyHolder.BorderSizePixel = 0
 KeyHolder.ClipsDescendants = true
-KeyHolder.Parent = ScreenGui
+KeyHolder.Parent = KeyShadow
 
 local KeyCorner = Instance.new("UICorner")
-KeyCorner.CornerRadius = UDim.new(0, 12)
+KeyCorner.CornerRadius = UDim.new(0, 14)
 KeyCorner.Parent = KeyHolder
 
 local KeyStroke = Instance.new("UIStroke")
-KeyStroke.Thickness = 1.2
-KeyStroke.Color = Color3.fromRGB(35, 35, 48)
+KeyStroke.Thickness = 1.5
+KeyStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 KeyStroke.Parent = KeyHolder
+
+local KeyStrokeGradient = Instance.new("UIGradient")
+KeyStrokeGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180, 210, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 180, 230))
+})
+KeyStrokeGradient.Parent = KeyStroke
 
 local KeyTitle = Instance.new("TextLabel")
 KeyTitle.Size = UDim2.new(1, 0, 0, 45)
@@ -81,7 +103,7 @@ KeyTitle.Parent = KeyHolder
 local KeyInput = Instance.new("TextBox")
 KeyInput.Size = UDim2.new(1, -40, 0, 38)
 KeyInput.Position = UDim2.new(0, 20, 0, 60)
-KeyInput.BackgroundColor3 = Color3.fromRGB(14, 14, 20)
+KeyInput.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
 KeyInput.PlaceholderText = "Paste License Key..."
 KeyInput.PlaceholderColor3 = Color3.fromRGB(80, 80, 100)
 KeyInput.Text = ""
@@ -97,7 +119,7 @@ KeyInputCorner.Parent = KeyInput
 local CopyHwidBtn = Instance.new("TextButton")
 CopyHwidBtn.Size = UDim2.new(0.5, -25, 0, 34)
 CopyHwidBtn.Position = UDim2.new(0, 20, 0, 110)
-CopyHwidBtn.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
+CopyHwidBtn.BackgroundColor3 = Color3.fromRGB(14, 14, 20)
 CopyHwidBtn.Text = "Copy HWID"
 CopyHwidBtn.TextColor3 = Color3.fromRGB(150, 150, 170)
 CopyHwidBtn.TextSize = 11
@@ -134,7 +156,7 @@ StatusLabel.TextSize = 10
 StatusLabel.Font = Enum.Font.Gotham
 StatusLabel.Parent = KeyHolder
 
-EnableDrag(KeyTitle, KeyHolder)
+EnableDrag(KeyTitle, KeyShadow)
 
 CopyHwidBtn.MouseButton1Click:Connect(function()
     if setclipboard then
@@ -145,8 +167,22 @@ CopyHwidBtn.MouseButton1Click:Connect(function()
 end)
 
 -- =================================================================
--- 2. MAIN MENU
+-- 2. MAIN MENU (PREMIUM LOOK)
 -- =================================================================
+local MainShadow = Instance.new("ImageLabel")
+MainShadow.Name = "MainShadow"
+MainShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+MainShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+MainShadow.Size = UDim2.new(0, 560, 0, 370)
+MainShadow.BackgroundTransparency = 1
+MainShadow.Image = "rbxassetid://1316045217"
+MainShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+MainShadow.ImageTransparency = 0.5
+MainShadow.ScaleType = Enum.ScaleType.Slice
+MainShadow.SliceCenter = Rect.new(10, 10, 118, 118)
+MainShadow.Visible = false
+MainShadow.Parent = ScreenGui
+
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -155,27 +191,37 @@ MainFrame.Size = UDim2.new(0, 520, 0, 330)
 MainFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
-MainFrame.Visible = false
-MainFrame.Parent = ScreenGui
+MainFrame.Parent = MainShadow
 
 local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.CornerRadius = UDim.new(0, 14)
 MainCorner.Parent = MainFrame
 
+-- Вращающаяся неон обводка
 local MainStroke = Instance.new("UIStroke")
-MainStroke.Thickness = 1.2
-MainStroke.Color = Color3.fromRGB(30, 30, 42)
+MainStroke.Thickness = 1.5
+MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 MainStroke.Parent = MainFrame
+
+local MainStrokeGradient = Instance.new("UIGradient")
+MainStrokeGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(0.25, Color3.fromRGB(180, 210, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 180, 230)),
+    ColorSequenceKeypoint.new(0.75, Color3.fromRGB(200, 255, 240)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+})
+MainStrokeGradient.Parent = MainStroke
 
 local SideBar = Instance.new("Frame")
 SideBar.Name = "SideBar"
 SideBar.Size = UDim2.new(0, 150, 1, 0)
-SideBar.BackgroundColor3 = Color3.fromRGB(5, 5, 8)
+SideBar.BackgroundColor3 = Color3.fromRGB(4, 4, 6)
 SideBar.BorderSizePixel = 0
 SideBar.Parent = MainFrame
 
 local SideBarCorner = Instance.new("UICorner")
-SideBarCorner.CornerRadius = UDim.new(0, 12)
+SideBarCorner.CornerRadius = UDim.new(0, 14)
 SideBarCorner.Parent = SideBar
 
 local LogoText = Instance.new("TextLabel")
@@ -206,22 +252,22 @@ TopBar.BackgroundTransparency = 1
 TopBar.Parent = MainFrame
 
 local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0, 24, 0, 24)
-CloseBtn.Position = UDim2.new(1, -32, 0.5, -12)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+CloseBtn.Size = UDim2.new(0, 26, 0, 26)
+CloseBtn.Position = UDim2.new(1, -34, 0.5, -13)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
 CloseBtn.Text = "✕"
 CloseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
-CloseBtn.TextSize = 11
+CloseBtn.TextSize = 12
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.AutoButtonColor = false
 CloseBtn.Parent = TopBar
 
 local CloseCorner = Instance.new("UICorner")
-CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.CornerRadius = UDim.new(0, 7)
 CloseCorner.Parent = CloseBtn
 
 CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
-EnableDrag(TopBar, MainFrame)
+EnableDrag(TopBar, MainShadow)
 
 local ContentFolder = Instance.new("Frame")
 ContentFolder.Name = "ContentFolder"
@@ -236,7 +282,7 @@ local ActiveTab = nil
 local function CreateTab(name, icon)
     local TabBtn = Instance.new("TextButton")
     TabBtn.Size = UDim2.new(1, 0, 0, 36)
-    TabBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+    TabBtn.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
     TabBtn.Text = "    " .. (icon or "•") .. "  " .. name
     TabBtn.TextColor3 = Color3.fromRGB(120, 120, 135)
     TabBtn.TextSize = 12
@@ -280,7 +326,7 @@ local function CreateTab(name, icon)
     TabBtn.MouseButton1Click:Connect(function()
         for _, t in pairs(Tabs) do
             t.Page.Visible = false
-            TweenService:Create(t.Btn, TweenInfo.new(0.25), {BackgroundColor3 = Color3.fromRGB(10, 10, 14), TextColor3 = Color3.fromRGB(120, 120, 135)}):Play()
+            TweenService:Create(t.Btn, TweenInfo.new(0.25), {BackgroundColor3 = Color3.fromRGB(8, 8, 12), TextColor3 = Color3.fromRGB(120, 120, 135)}):Play()
             TweenService:Create(t.Indicator, TweenInfo.new(0.25), {BackgroundTransparency = 1}):Play()
         end
         Page.Visible = true
@@ -370,8 +416,15 @@ local VisualsTab = CreateTab("Visuals", "👁")
 local WorldTab = CreateTab("World", "🌐")
 local SettingsTab = CreateTab("Settings", "⚙")
 
-MainTab:AddToggle("Auto Farm Test", function(s) end)
-VisualsTab:AddToggle("ESP Box", function(s) end)
+MainTab:AddToggle("Auto Farm Kills", function(s) end)
+VisualsTab:AddToggle("ESP Player Boxes", function(s) end)
+
+-- Анимация перелива Градиентов
+RunService.RenderStepped:Connect(function(dt)
+    if not ScreenGui.Parent then return end
+    KeyStrokeGradient.Rotation = (KeyStrokeGradient.Rotation + dt * 40) % 360
+    MainStrokeGradient.Rotation = (MainStrokeGradient.Rotation + dt * 40) % 360
+end)
 
 -- =================================================================
 -- 3. AUTH CHECK
@@ -396,9 +449,9 @@ SubmitBtn.MouseButton1Click:Connect(function()
                     StatusLabel.Text = "Access Granted!"
                     StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 160)
                     
-                    task.wait(0.4)
-                    KeyHolder.Visible = false
-                    MainFrame.Visible = true
+                    task.wait(0.3)
+                    KeyShadow.Visible = false
+                    MainShadow.Visible = true
                 else
                     StatusLabel.Text = "HWID Mismatch!"
                     StatusLabel.TextColor3 = Color3.fromRGB(255, 90, 90)
