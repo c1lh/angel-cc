@@ -5,8 +5,11 @@ local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
 
-local TargetParent = gethui and gethui() or CoreGui or Players.LocalPlayer:WaitForChild("PlayerGui")
+local LocalPlayer = Players.LocalPlayer
+local TargetParent = gethui and gethui() or CoreGui or LocalPlayer:WaitForChild("PlayerGui")
 
 if TargetParent:FindFirstChild("angel_cc") then 
     TargetParent["angel_cc"]:Destroy() 
@@ -16,7 +19,7 @@ end
 local GITHUB_KEYS_URL = "https://raw.githubusercontent.com/c1lh/angel-cc/main/keys.json"
 local ClientHWID = gethwid and gethwid() or game:GetService("RbxAnalyticsService"):GetClientId()
 
--- [[ MAIN GUI ]] --
+-- [[ MAIN GUI SETUP ]] --
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "angel_cc"
 ScreenGui.ResetOnSpawn = false
@@ -48,9 +51,7 @@ local function EnableDrag(dragFrame, moveFrame)
     end)
 end
 
--- =================================================================
--- 1. KEY SYSTEM (AUTH)
--- =================================================================
+-- KEY SYSTEM
 local KeyShadow = Instance.new("ImageLabel")
 KeyShadow.Name = "KeyShadow"
 KeyShadow.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -171,9 +172,7 @@ CopyHwidBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- =================================================================
--- 2. MAIN MENU WINDOW
--- =================================================================
+-- MAIN MENU
 local MainShadow = Instance.new("ImageLabel")
 MainShadow.Name = "MainShadow"
 MainShadow.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -216,7 +215,7 @@ MainGradient.Color = ColorSequence.new({
 })
 MainGradient.Parent = MainStroke
 
--- ПЛАВАЮЩАЯ ИКОНКА (СВЕРНУТЫЙ РЕЖИМ)
+-- TOGGLE WIDGET
 local ToggleWidget = Instance.new("TextButton")
 ToggleWidget.Name = "ToggleWidget"
 ToggleWidget.Size = UDim2.new(0, 110, 0, 34)
@@ -250,7 +249,7 @@ WidgetGradient.Parent = WidgetStroke
 
 EnableDrag(ToggleWidget, ToggleWidget)
 
--- Окно Подтверждения Закрытия
+-- CONFIRM OVERLAY
 local ConfirmOverlay = Instance.new("Frame")
 ConfirmOverlay.Name = "ConfirmOverlay"
 ConfirmOverlay.Size = UDim2.new(1, 0, 1, 0)
@@ -333,7 +332,7 @@ local ExitCorner = Instance.new("UICorner")
 ExitCorner.CornerRadius = UDim.new(0, 6)
 ExitCorner.Parent = ExitBtn
 
--- Sidebar
+-- SIDEBAR & TOPBAR
 local SideBar = Instance.new("Frame")
 SideBar.Name = "SideBar"
 SideBar.Size = UDim2.new(0, 145, 1, 0)
@@ -405,30 +404,16 @@ local MinimizeCorner = Instance.new("UICorner")
 MinimizeCorner.CornerRadius = UDim.new(0, 6)
 MinimizeCorner.Parent = MinimizeBtn
 
--- Логика подтверждения закрытия
-CloseBtn.MouseButton1Click:Connect(function()
-    ConfirmOverlay.Visible = true
-end)
+CloseBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = true end)
+CancelBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
+ExitBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 
-CancelBtn.MouseButton1Click:Connect(function()
-    ConfirmOverlay.Visible = false
-end)
-
-ExitBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
-
--- Плавное сворачивание и разворачивание
 local isAnimating = false
-
 MinimizeBtn.MouseButton1Click:Connect(function()
     if isAnimating then return end
     isAnimating = true
-    
-    -- Вычисляем позицию чутка выше текущего положения меню
     local mainPos = MainShadow.Position
     ToggleWidget.Position = UDim2.new(mainPos.X.Scale, mainPos.X.Offset - 55, mainPos.Y.Scale, mainPos.Y.Offset - 210)
-    
     ToggleWidget.Size = UDim2.new(0, 0, 0, 34)
     ToggleWidget.Visible = true
     
@@ -446,7 +431,6 @@ end)
 ToggleWidget.MouseButton1Click:Connect(function()
     if isAnimating then return end
     isAnimating = true
-    
     MainShadow.Visible = true
     MainFrame.Size = UDim2.new(0, 520, 0, 0)
     MainShadow.Size = UDim2.new(0, 560, 0, 0)
@@ -473,7 +457,10 @@ ContentFolder.Parent = MainFrame
 local Tabs = {}
 local ActiveTab = nil
 
-local function CreateTab(name)
+-- API ДЛЯ СОЗДАНИЯ ВКЛАДОК И КНОПОК
+local Library = {}
+
+function Library:CreateTab(name)
     local TabBtn = Instance.new("TextButton")
     TabBtn.Size = UDim2.new(1, 0, 0, 34)
     TabBtn.BackgroundColor3 = Color3.fromRGB(6, 6, 10)
@@ -556,7 +543,6 @@ local function CreateTab(name)
 
     local PageElements = {}
 
-    -- TOGGLE
     function PageElements:AddToggle(text, callback)
         local Toggle = Instance.new("TextButton")
         Toggle.Size = UDim2.new(1, -10, 0, 38)
@@ -621,7 +607,6 @@ local function CreateTab(name)
         end)
     end
 
-    -- DROPDOWN
     function PageElements:AddDropdown(text, options, callback)
         local DropdownFrame = Instance.new("Frame")
         DropdownFrame.Size = UDim2.new(1, -10, 0, 38)
@@ -728,21 +713,36 @@ local function CreateTab(name)
         end
     end
 
+    function PageElements:AddButton(text, callback)
+        local Btn = Instance.new("TextButton")
+        Btn.Size = UDim2.new(1, -10, 0, 34)
+        Btn.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
+        Btn.Text = text
+        Btn.TextColor3 = Color3.fromRGB(200, 210, 230)
+        Btn.TextSize = 12
+        Btn.Font = Enum.Font.GothamMedium
+        Btn.AutoButtonColor = false
+        Btn.Parent = Page
+
+        local BtnCorner = Instance.new("UICorner")
+        BtnCorner.CornerRadius = UDim.new(0, 8)
+        BtnCorner.Parent = Btn
+
+        local BtnStroke = Instance.new("UIStroke")
+        BtnStroke.Thickness = 1
+        BtnStroke.Color = Color3.fromRGB(25, 25, 35)
+        BtnStroke.Parent = Btn
+
+        Btn.MouseButton1Click:Connect(function()
+            TweenService:Create(Btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(25, 25, 35)}):Play()
+            task.wait(0.1)
+            TweenService:Create(Btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(12, 12, 18)}):Play()
+            if callback then callback() end
+        end)
+    end
+
     return PageElements
 end
-
-local MainTab = CreateTab("Main")
-local VisualsTab = CreateTab("Visuals")
-local WorldTab = CreateTab("World")
-CreateTab("Settings")
-
-MainTab:AddToggle("Auto Farm Kills", function(state) end)
-MainTab:AddDropdown("Farm Method", {"Teleport", "Tween", "Behind Player"}, function(selected) end)
-
-VisualsTab:AddToggle("Player ESP", function(state) end)
-VisualsTab:AddDropdown("ESP Style", {"Boxes", "Tracers", "Skeleton", "3D Box"}, function(selected) end)
-
-WorldTab:AddToggle("Remove Atmosphere", function(state) end)
 
 RunService.RenderStepped:Connect(function(dt)
     if not ScreenGui.Parent then return end
@@ -751,9 +751,6 @@ RunService.RenderStepped:Connect(function(dt)
     WidgetGradient.Rotation = (WidgetGradient.Rotation + dt * 40) % 360
 end)
 
--- =================================================================
--- 3. AUTH LOGIC
--- =================================================================
 SubmitBtn.MouseButton1Click:Connect(function()
     StatusLabel.Text = "Checking..."
     StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 100)
@@ -792,3 +789,537 @@ SubmitBtn.MouseButton1Click:Connect(function()
         end
     end)
 end)
+
+-- =================================================================
+-- 4. ТВОИ ВКЛАДКИ И ФУНКЦИИ
+-- =================================================================
+
+-- Создаём вкладки
+local MainTab = Library:CreateTab("Main")
+local VisualsTab = Library:CreateTab("Visuals")
+local ItemsTab = Library:CreateTab("Items")
+local SettingsTab = Library:CreateTab("Settings")
+
+--------------------------------------------------------------------
+-- MAIN TAB
+--------------------------------------------------------------------
+MainTab:AddButton("Rejoin Game", function()
+    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+end)
+
+MainTab:AddToggle("Auto Farm Kills", function(state)
+    if state then
+        print("Автофарм включен!")
+    else
+        print("Автофарм выключен!")
+    end
+end)
+
+MainTab:AddDropdown("Farm Method", {"Teleport", "Tween", "Behind Player"}, function(selected)
+    print("Выбран метод:", selected)
+end)
+
+--------------------------------------------------------------------
+-- VISUALS TAB (CLEANED FOV-ONLY ENGINE)
+--------------------------------------------------------------------
+local Camera = Workspace.CurrentCamera
+Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+    Camera = Workspace.CurrentCamera
+end)
+
+local VisualState = {
+    ChamsEnabled = false,
+    ChamsFillAlpha = 0.5,
+    ChamsMode = Enum.HighlightDepthMode.AlwaysOnTop,
+    ChamsConnections = {},
+    Highlights = {},
+
+    AtmosphereEnabled = false,
+    CurrentPreset = "Clean",
+
+    CamEffectsEnabled = false,
+    TargetFOV = 70,
+
+    OriginalCamera = {
+        FieldOfView = Camera and Camera.FieldOfView or 70
+    }
+}
+
+-- 1. HIGHLIGHTS / CHAMS
+local function ApplyHighlightToPlayer(player)
+    if player == LocalPlayer then return end
+    
+    local function SetupHighlight(char)
+        if not char then return end
+        if VisualState.Highlights[player] then
+            VisualState.Highlights[player]:Destroy()
+            VisualState.Highlights[player] = nil
+        end
+
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "Angel_Chams_" .. player.Name
+        highlight.FillColor = Color3.fromRGB(160, 200, 255)
+        highlight.OutlineColor = Color3.fromRGB(255, 160, 220)
+        highlight.FillTransparency = VisualState.ChamsFillAlpha
+        highlight.OutlineTransparency = 0
+        highlight.DepthMode = VisualState.ChamsMode
+        highlight.Adornee = char
+        highlight.Parent = char
+
+        VisualState.Highlights[player] = highlight
+    end
+
+    if player.Character then
+        SetupHighlight(player.Character)
+    end
+
+    local conn = player.CharacterAdded:Connect(function(char)
+        if VisualState.ChamsEnabled then
+            task.wait(0.2)
+            SetupHighlight(char)
+        end
+    end)
+    table.insert(VisualState.ChamsConnections, conn)
+end
+
+local function EnableChams()
+    VisualState.ChamsEnabled = true
+    for _, player in ipairs(Players:GetPlayers()) do
+        ApplyHighlightToPlayer(player)
+    end
+
+    local playerAddedConn = Players.PlayerAdded:Connect(function(player)
+        if VisualState.ChamsEnabled then
+            ApplyHighlightToPlayer(player)
+        end
+    end)
+    table.insert(VisualState.ChamsConnections, playerAddedConn)
+
+    local playerRemovingConn = Players.PlayerRemoving:Connect(function(player)
+        if VisualState.Highlights[player] then
+            VisualState.Highlights[player]:Destroy()
+            VisualState.Highlights[player] = nil
+        end
+    end)
+    table.insert(VisualState.ChamsConnections, playerRemovingConn)
+end
+
+local function DisableChams()
+    VisualState.ChamsEnabled = false
+    for _, conn in ipairs(VisualState.ChamsConnections) do
+        conn:Disconnect()
+    end
+    table.clear(VisualState.ChamsConnections)
+
+    for player, hl in pairs(VisualState.Highlights) do
+        if hl and hl.Parent then
+            hl:Destroy()
+        end
+    end
+    table.clear(VisualState.Highlights)
+end
+
+local function UpdateChamsProperties()
+    for _, hl in pairs(VisualState.Highlights) do
+        if hl and hl.Parent then
+            hl.FillTransparency = VisualState.ChamsFillAlpha
+            hl.DepthMode = VisualState.ChamsMode
+        end
+    end
+end
+
+-- 2. ATMOSPHERE PRESETS (СОХРАНЕНЫ БЕЗ ИЗМЕНЕНИЙ)
+local BalancedPresets = {
+    Clean = {
+        ClockTime = 14,
+        Brightness = 1.5,
+        ExposureCompensation = 0,
+        OutdoorAmbient = Color3.fromRGB(110, 115, 125),
+        Ambient = Color3.fromRGB(80, 80, 85),
+        ColorCorrection = { TintColor = Color3.fromRGB(255, 255, 255), Saturation = 0.05, Contrast = 0.02 },
+        Bloom = { Intensity = 0.15, Size = 12, Threshold = 0.95 }
+    },
+    Cyber = {
+        ClockTime = 1,
+        Brightness = 1.0,
+        ExposureCompensation = -0.1,
+        OutdoorAmbient = Color3.fromRGB(30, 45, 60),
+        Ambient = Color3.fromRGB(20, 35, 50),
+        ColorCorrection = { TintColor = Color3.fromRGB(190, 235, 255), Saturation = 0.2, Contrast = 0.1 },
+        Bloom = { Intensity = 0.35, Size = 20, Threshold = 0.85 }
+    },
+    Dream = {
+        ClockTime = 17,
+        Brightness = 1.6,
+        ExposureCompensation = 0.05,
+        OutdoorAmbient = Color3.fromRGB(110, 90, 105),
+        Ambient = Color3.fromRGB(90, 75, 90),
+        ColorCorrection = { TintColor = Color3.fromRGB(255, 225, 235), Saturation = 0.12, Contrast = 0.04 },
+        Bloom = { Intensity = 0.25, Size = 24, Threshold = 0.9 }
+    },
+    Dark = {
+        ClockTime = 0,
+        Brightness = 0.6,
+        ExposureCompensation = -0.25,
+        OutdoorAmbient = Color3.fromRGB(18, 20, 28),
+        Ambient = Color3.fromRGB(15, 16, 22),
+        ColorCorrection = { TintColor = Color3.fromRGB(210, 215, 230), Saturation = -0.15, Contrast = 0.12 },
+        Bloom = { Intensity = 0.1, Size = 10, Threshold = 0.95 }
+    },
+    Aurora = {
+        ClockTime = 20,
+        Brightness = 1.2,
+        ExposureCompensation = -0.05,
+        OutdoorAmbient = Color3.fromRGB(40, 70, 75),
+        Ambient = Color3.fromRGB(30, 50, 55),
+        ColorCorrection = { TintColor = Color3.fromRGB(190, 245, 230), Saturation = 0.18, Contrast = 0.06 },
+        Bloom = { Intensity = 0.25, Size = 18, Threshold = 0.88 }
+    }
+}
+
+local WorldInstances = {}
+local function GetManagedInstance(className, name)
+    local inst = WorldInstances[name]
+    if not inst or not inst.Parent then
+        inst = Instance.new(className)
+        inst.Name = "Angel_" .. name
+        WorldInstances[name] = inst
+    end
+    return inst
+end
+
+local function RemoveManagedInstance(name)
+    local inst = WorldInstances[name]
+    if inst then
+        if typeof(inst) == "Instance" and inst.Parent then
+            inst:Destroy()
+        end
+        WorldInstances[name] = nil
+    end
+end
+
+local function ApplyAtmospherePreset(name)
+    local preset = BalancedPresets[name]
+    if not preset then return end
+
+    TweenService:Create(Lighting, TweenInfo.new(0.5), {
+        ClockTime = preset.ClockTime,
+        Brightness = preset.Brightness,
+        ExposureCompensation = preset.ExposureCompensation,
+        OutdoorAmbient = preset.OutdoorAmbient,
+        Ambient = preset.Ambient
+    }):Play()
+
+    local cc = GetManagedInstance("ColorCorrectionEffect", "CC")
+    cc.Parent = Lighting
+    TweenService:Create(cc, TweenInfo.new(0.5), {
+        TintColor = preset.ColorCorrection.TintColor,
+        Saturation = preset.ColorCorrection.Saturation,
+        Contrast = preset.ColorCorrection.Contrast
+    }):Play()
+
+    local bloom = GetManagedInstance("BloomEffect", "Bloom")
+    bloom.Parent = Lighting
+    TweenService:Create(bloom, TweenInfo.new(0.5), {
+        Intensity = preset.Bloom.Intensity,
+        Size = preset.Bloom.Size,
+        Threshold = preset.Bloom.Threshold
+    }):Play()
+end
+
+local function RestoreLighting()
+    TweenService:Create(Lighting, TweenInfo.new(0.5), {
+        ClockTime = Lighting.ClockTime,
+        Brightness = 2,
+        ExposureCompensation = 0,
+        OutdoorAmbient = Color3.fromRGB(128, 128, 128),
+        Ambient = Color3.fromRGB(128, 128, 128)
+    }):Play()
+
+    RemoveManagedInstance("CC")
+    RemoveManagedInstance("Bloom")
+end
+
+-- 3. ROBUST WORKING FOV CONTROLLER
+local function UpdateCameraFOV(fov)
+    VisualState.TargetFOV = fov
+    if VisualState.CamEffectsEnabled and Camera then
+        TweenService:Create(Camera, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            FieldOfView = fov
+        }):Play()
+    end
+end
+
+local function RestoreCamera()
+    if Camera then
+        TweenService:Create(Camera, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            FieldOfView = VisualState.OriginalCamera.FieldOfView
+        }):Play()
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    Camera = Workspace.CurrentCamera
+    if VisualState.CamEffectsEnabled then
+        UpdateCameraFOV(VisualState.TargetFOV)
+    end
+end)
+
+-- REGISTERING CONTROLS IN VISUALSTAB
+VisualsTab:AddDropdown("Preset Theme", {"Clean", "Cyber", "Dream", "Dark", "Aurora"}, function(selected)
+    VisualState.CurrentPreset = selected
+    if VisualState.AtmosphereEnabled then
+        ApplyAtmospherePreset(selected)
+    end
+end)
+
+VisualsTab:AddToggle("Custom Atmosphere", function(state)
+    VisualState.AtmosphereEnabled = state
+    if state then
+        ApplyAtmospherePreset(VisualState.CurrentPreset)
+    else
+        RestoreLighting()
+    end
+end)
+
+VisualsTab:AddToggle("Player Highlights", function(state)
+    if state then
+        EnableChams()
+    else
+        DisableChams()
+    end
+end)
+
+VisualsTab:AddDropdown("Chams Mode", {"AlwaysOnTop", "Occluded"}, function(selected)
+    VisualState.ChamsMode = (selected == "AlwaysOnTop") and Enum.HighlightDepthMode.AlwaysOnTop or Enum.HighlightDepthMode.Occluded
+    UpdateChamsProperties()
+end)
+
+VisualsTab:AddDropdown("Chams Opacity", {"Subtle (0.8)", "Balanced (0.5)", "Solid (0.2)"}, function(selected)
+    if selected:find("Subtle") then
+        VisualState.ChamsFillAlpha = 0.8
+    elseif selected:find("Solid") then
+        VisualState.ChamsFillAlpha = 0.2
+    else
+        VisualState.ChamsFillAlpha = 0.5
+    end
+    UpdateChamsProperties()
+end)
+
+VisualsTab:AddToggle("Camera FX (FOV)", function(state)
+    VisualState.CamEffectsEnabled = state
+    if state then
+        UpdateCameraFOV(VisualState.TargetFOV)
+    else
+        RestoreCamera()
+    end
+end)
+
+VisualsTab:AddDropdown("FOV Mode", {"Default (70)", "Wide (90)", "UltraWide (110)", "Cinematic (50)"}, function(selected)
+    local fovMap = {
+        ["Default (70)"] = 70,
+        ["Wide (90)"] = 90,
+        ["UltraWide (110)"] = 110,
+        ["Cinematic (50)"] = 50
+    }
+    UpdateCameraFOV(fovMap[selected] or 70)
+end)
+
+VisualsTab:AddButton("Reset All Visuals", function()
+    DisableChams()
+    RestoreLighting()
+    RestoreCamera()
+
+    VisualState.AtmosphereEnabled = false
+    VisualState.CamEffectsEnabled = false
+end)
+
+--------------------------------------------------------------------
+-- ITEMS TAB (MM2 DECORATIVE & FUN ITEMS WITH PERSISTENCE)
+--------------------------------------------------------------------
+local ItemStates = {
+    ["Cola / Drink"] = false,
+    ["Mm2 Knife"] = false,
+    ["Mm2 Gun"] = false,
+    ["Granade"] = false,
+    ["Mm2 Bomb"] = false,
+    ["Plushie"] = false,
+    ["Magic Wand"] = false,
+    ["Flashlight"] = false,
+    ["Funny Hat"] = false,
+    ["Mystery Coin"] = false
+}
+
+local ActiveItemInstances = {}
+
+local function RemoveItemInstance(itemName)
+    if ActiveItemInstances[itemName] then
+        if typeof(ActiveItemInstances[itemName]) == "Instance" and ActiveItemInstances[itemName].Parent then
+            ActiveItemInstances[itemName]:Destroy()
+        end
+        ActiveItemInstances[itemName] = nil
+    end
+end
+
+local function CreateItemProp(itemName, character)
+    RemoveItemInstance(itemName)
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    local head = character:FindFirstChild("Head")
+    local rightHand = character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm")
+
+    if not rootPart then return end
+
+    local model = Instance.new("Model")
+    model.Name = "Angel_Item_" .. itemName
+
+    if itemName == "Cola / Drink" then
+        local part = Instance.new("Part")
+        part.Size = Vector3.new(0.6, 1.2, 0.6)
+        part.Color = Color3.fromRGB(220, 20, 60)
+        part.Material = Enum.Material.SmoothPlastic
+        part.Position = rootPart.Position + Vector3.new(1, 0, 0)
+        part.Parent = model
+        local weld = Instance.new("WeldConstraint")
+        weld.Part0 = part
+        weld.Part1 = rightHand or rootPart
+        weld.Parent = part
+    elseif itemName == "Mm2 Knife" then
+        local blade = Instance.new("Part")
+        blade.Size = Vector3.new(0.2, 0.2, 1.2)
+        blade.Color = Color3.fromRGB(200, 200, 220)
+        blade.Material = Enum.Material.Metal
+        blade.Parent = model
+        local handle = Instance.new("Part")
+        handle.Size = Vector3.new(0.3, 0.3, 0.6)
+        handle.Color = Color3.fromRGB(30, 30, 30)
+        handle.Position = blade.Position - Vector3.new(0, 0, 0.8)
+        handle.Parent = model
+        local weld = Instance.new("WeldConstraint")
+        weld.Part0 = blade
+        weld.Part1 = rightHand or rootPart
+        weld.Parent = blade
+    elseif itemName == "Mm2 Gun" then
+        local gun = Instance.new("Part")
+        gun.Size = Vector3.new(0.4, 0.8, 1.0)
+        gun.Color = Color3.fromRGB(40, 40, 45)
+        gun.Material = Enum.Material.Metal
+        gun.Parent = model
+        local weld = Instance.new("WeldConstraint")
+        weld.Part0 = gun
+        weld.Part1 = rightHand or rootPart
+        weld.Parent = gun
+    elseif itemName == "Granade" or itemName == "Mm2 Bomb" then
+        local bomb = Instance.new("Part")
+        bomb.Shape = Enum.PartType.Ball
+        bomb.Size = Vector3.new(1, 1, 1)
+        bomb.Color = itemName == "Mm2 Bomb" and Color3.fromRGB(15, 15, 15) or Color3.fromRGB(50, 80, 50)
+        bomb.Material = Enum.Material.Slate
+        bomb.Parent = model
+        local weld = Instance.new("WeldConstraint")
+        weld.Part0 = bomb
+        weld.Part1 = rightHand or rootPart
+        weld.Parent = bomb
+    elseif itemName == "Plushie" then
+        local plush = Instance.new("Part")
+        plush.Size = Vector3.new(1.2, 1.2, 1.2)
+        plush.Color = Color3.fromRGB(255, 180, 200)
+        plush.Shape = Enum.PartType.Ball
+        plush.Parent = model
+        local weld = Instance.new("WeldConstraint")
+        weld.Part0 = plush
+        weld.Part1 = rightHand or rootPart
+        weld.Parent = plush
+    elseif itemName == "Magic Wand" then
+        local wand = Instance.new("Part")
+        wand.Size = Vector3.new(0.15, 0.15, 1.5)
+        wand.Color = Color3.fromRGB(80, 40, 20)
+        wand.Parent = model
+        local tip = Instance.new("Part")
+        tip.Size = Vector3.new(0.3, 0.3, 0.3)
+        tip.Shape = Enum.PartType.Ball
+        tip.Color = Color3.fromRGB(255, 255, 0)
+        tip.Position = wand.Position + Vector3.new(0, 0, 0.8)
+        tip.Parent = model
+        local weld = Instance.new("WeldConstraint")
+        weld.Part0 = wand
+        weld.Part1 = rightHand or rootPart
+        weld.Parent = wand
+    elseif itemName == "Flashlight" then
+        local flash = Instance.new("Part")
+        flash.Size = Vector3.new(0.3, 0.3, 1.0)
+        flash.Color = Color3.fromRGB(200, 200, 200)
+        flash.Parent = model
+        local weld = Instance.new("WeldConstraint")
+        weld.Part0 = flash
+        weld.Part1 = rightHand or rootPart
+        weld.Parent = flash
+    elseif itemName == "Funny Hat" then
+        local hat = Instance.new("Part")
+        hat.Size = Vector3.new(1.5, 0.4, 1.5)
+        hat.Color = Color3.fromRGB(255, 100, 255)
+        hat.Parent = model
+        if head then
+            hat.Position = head.Position + Vector3.new(0, 1, 0)
+            local weld = Instance.new("WeldConstraint")
+            weld.Part0 = hat
+            weld.Part1 = head
+            weld.Parent = hat
+        end
+    elseif itemName == "Mystery Coin" then
+        local coin = Instance.new("Part")
+        coin.Size = Vector3.new(0.6, 0.6, 0.1)
+        coin.Shape = Enum.PartType.Cylinder
+        coin.Color = Color3.fromRGB(255, 215, 0)
+        coin.Material = Enum.Material.Neon
+        coin.Parent = model
+        local weld = Instance.new("WeldConstraint")
+        weld.Part0 = coin
+        weld.Part1 = rightHand or rootPart
+        weld.Parent = coin
+    end
+
+    model.Parent = character
+    ActiveItemInstances[itemName] = model
+end
+
+local function RefreshAllActiveItems()
+    local char = LocalPlayer.Character
+    if not char then return end
+    for itemName, isActive in pairs(ItemStates) do
+        if isActive then
+            CreateItemProp(itemName, char)
+        else
+            RemoveItemInstance(itemName)
+        end
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    task.wait(0.6) -- Wait for character parts to fully load
+    RefreshAllActiveItems()
+end)
+
+local itemNamesList = {
+    "Cola / Drink",
+    "Mm2 Knife",
+    "Mm2 Gun",
+    "Granade",
+    "Mm2 Bomb",
+    "Plushie",
+    "Magic Wand",
+    "Flashlight",
+    "Funny Hat",
+    "Mystery Coin"
+}
+
+for _, itemName in ipairs(itemNamesList) do
+    ItemsTab:AddToggle(itemName, function(state)
+        ItemStates[itemName] = state
+        if state and LocalPlayer.Character then
+            CreateItemProp(itemName, LocalPlayer.Character)
+        else
+            RemoveItemInstance(itemName)
+        end
+    end)
+end
